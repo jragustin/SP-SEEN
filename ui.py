@@ -1,14 +1,20 @@
 import tkinter as tk
 import tkinter.filedialog as filedialog
+import numpy as np
 import os
 from PIL import Image, ImageTk
+from keras.models import load_model
+from keras.preprocessing import image
+
 PATH = os.getcwd()
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
         self.pack()
+        self.load_saved_model()
         self.create_buttons()
         master.configure(background='black')
+        self.IMAGE_SIZE = 512
 
     def create_buttons(self):
         #open File button
@@ -37,6 +43,16 @@ class Application(tk.Frame):
 
     def analyze_image(self):
         print("Analyzing image")
+        print(root.filename)
+        img = image.load_img(root.filename, target_size=(self.IMAGE_SIZE,self.IMAGE_SIZE))
+        img = np.array(img)
+        img = img.reshape(1, self.IMAGE_SIZE, self.IMAGE_SIZE,3)
+        prediction = self.model.predict(img)
+        # self.model.predictImage(root.filename)
+        print("predicting: ",prediction)
+
+    def load_saved_model(self):
+        self.model = load_model('./models/CNN_weights.h5')
 
 root = tk.Tk()
 app = Application(master=root)
