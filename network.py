@@ -9,8 +9,9 @@ from keras.layers.convolutional import Conv2D
 from keras.preprocessing import image
 from keras.utils import to_categorical
 
+
 # sess = tf.Session(config=config) 
-config = tf.ConfigProto()
+# config = tf.ConfigProto()
 config = tf.ConfigProto( device_count = {'GPU': 0 , 'CPU': 4} ) 
 # config.gpu_options.allow_growth = True
 # config.gpu_options.allocator_type = 'BFC'
@@ -38,7 +39,7 @@ class SteganalysisModel:
 
         # self.model.add(Flatten(batch_input_shape=(None,512,512,3)))
         # self.model.add(Flatten())
-        self.model.add(Conv2D(1,(3,3), input_shape=(self.IMAGE_SIZE,self.IMAGE_SIZE,3)))
+        self.model.add(Conv2D(3,(3,3), input_shape=(self.IMAGE_SIZE,self.IMAGE_SIZE,3)))
         self.model.add(Activation('tanh'))
 
         self.model.add(Conv2D(64,(509,509)))
@@ -57,26 +58,32 @@ class SteganalysisModel:
         self.model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'], options = run_opts)
-        history = AccuracyHistory()
+        # history = AccuracyHistory()
         self.model.fit(
             X_train, 
             y_train, 
             batch_size=1, 
             validation_data=(X_test, y_test), 
-            epochs=10,
-            callbacks=[history])
+            epochs=5)
 
         self.model.summary()
         score = self.model.evaluate(X_test, y_test, verbose=0)
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
-        plt.plot(range(1, 11), history.acc)
-        plt.xlabel('Epochs')
-        plt.ylabel('Accuracy')
-        plt.show()
+        
+        # tbCallBack = TensorBoard(log_dir=LOG_DIR, 
+        #                 histogram_freq=1,
+        #                 write_graph=True,
+        #                 write_grads=True,
+        #                 batch_size=batch_size,
+        #                 write_images=True)
+        # plt.plot(range(1, 11), history.acc)
+        # plt.xlabel('Epochs')
+        # plt.ylabel('Accuracy')
+        # plt.show()
 
     def saveModel(self):
-        self.model.save('./models/CNN_weights2.h5')
+        self.model.save('./models/CNN_weights3.h5')
 
     def getTrainingData(self):
         train_path = self.PATH+'/main_dataset/training_data/'
@@ -142,6 +149,6 @@ class SteganalysisModel:
 def main():
     #create class
     network = SteganalysisModel()
-    network.predictImage()
+    network.predictImage("/home/jcooo/Desktop/Agustin (DO NOT DELETE)/Agustin, Jerico SP/main_dataset/testing_data/f5/2000.jpg")
 if __name__ == "__main__":
     main()
