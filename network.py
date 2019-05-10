@@ -9,21 +9,13 @@ from keras.layers.convolutional import Conv2D
 from keras.preprocessing import image
 from keras.utils import to_categorical
 
-
-# sess = tf.Session(config=config) 
+'''######################################
+Configuration to use cpu only
+'''######################################
 # config = tf.ConfigProto()
 config = tf.ConfigProto( device_count = {'GPU': 0 , 'CPU': 4} ) 
-# config.gpu_options.allow_growth = True
-# config.gpu_options.allocator_type = 'BFC'
 session = tf.Session(config=config)
 keras.backend.set_session(session)
-
-class AccuracyHistory(keras.callbacks.Callback):
-    def on_train_begin(self, logs={}):
-        self.acc = []
-
-    def on_epoch_end(self, batch, logs={}):
-        self.acc.append(logs.get('acc'))
 
 
 class SteganalysisModel:
@@ -33,36 +25,46 @@ class SteganalysisModel:
         self.createModel()
         self.trainModel()
         self.saveModel()
-        
+    
+
+    '''################################
+    Creating Convolutional Model:
+    Input -> ConvLayer -> 3x3x3 kernel-> Relu -> ConvLayer -> 509x509x64 -> Relu -> fully connected -> output
+    '''################################    
     def createModel(self):
+
         self.model = Sequential()
 
-        # self.model.add(Flatten(batch_input_shape=(None,512,512,3)))
-        # self.model.add(Flatten())
         self.model.add(Conv2D(3,(3,3), input_shape=(self.IMAGE_SIZE,self.IMAGE_SIZE,3)))
-        self.model.add(Activation('tanh'))
+        self.model.add(Activation('relu'))
 
         self.model.add(Conv2D(64,(509,509)))
-        self.model.add(Activation('tanh'))
+        self.model.add(Activation('relu'))
 
         self.model.add(Flatten())
-        # self.model.add(Dense(256, activation='relu'))
-        self.model.add(Dropout(0.2))
+        self.model.add(Dense(512, activation='relu'))
+        self.model.add(Dropout(0.4))
         self.model.add(Dense(4, activation='softmax'))
 
+    '''################################
+    This is where the training happens.
+    You can lower the 'epochs' in model.fit to lessen the processing time
+    '''################################ 
     def trainModel(self):
+        
         X_train,y_train = self.getTrainingData()
         X_test,y_test = self.getTestingData()
+        
+
         run_opts = tf.RunOptions(report_tensor_allocations_upon_oom = True)
-        #create model
         self.model.compile(loss=keras.losses.categorical_crossentropy,
-              optimizer=keras.optimizers.Adam(),
+              optimizer=keras.optimizers.Adam(lr=0.001),
               metrics=['accuracy'], options = run_opts)
-        # history = AccuracyHistory()
+
         self.model.fit(
             X_train, 
             y_train, 
-            batch_size=1, 
+            batch_size=10, 
             validation_data=(X_test, y_test), 
             epochs=5)
 
@@ -71,20 +73,16 @@ class SteganalysisModel:
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
         
-        # tbCallBack = TensorBoard(log_dir=LOG_DIR, 
-        #                 histogram_freq=1,
-        #                 write_graph=True,
-        #                 write_grads=True,
-        #                 batch_size=batch_size,
-        #                 write_images=True)
-        # plt.plot(range(1, 11), history.acc)
-        # plt.xlabel('Epochs')
-        # plt.ylabel('Accuracy')
-        # plt.show()
 
+    '''################################
+    Saves the whole neural network with all the parameters, weights and biases.
+    '''################################ 
     def saveModel(self):
-        self.model.save('./models/CNN_weights3.h5')
+        self.model.save('./models/CNN_weights4.h5')
 
+    '''################################
+    loads all the training data
+    '''################################ 
     def getTrainingData(self):
         train_path = self.PATH+'/main_dataset/training_data/'
         train_categories = os.listdir(train_path) #lists all the files in the folder
@@ -112,10 +110,13 @@ class SteganalysisModel:
 
         return(X_train,y_train)
 
+    '''################################
+    loads all the testing data
+    '''################################
     def getTestingData(self):
         X_test = []
         y_test = []
-        train_path2 = self.PATH+'/main_dataset/training_data/'
+        train_path2 = self.PATH+'/main_dataset/testing_data/'
         train_categories2 = os.listdir(train_path2) #lists all the files in the folder
 
         for label in train_categories2:
@@ -139,6 +140,9 @@ class SteganalysisModel:
 
         return(X_test, y_test)
 
+    '''################################
+    classifies the image given
+    '''################################
     def predictImage(self, imgPath):
         img = image.load_img(imgPath, target_size=(self.IMAGE_SIZE,self.IMAGE_SIZE))
         img = np.array(img)

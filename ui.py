@@ -10,10 +10,7 @@ from keras.preprocessing import image
 
 PATH = os.getcwd()
 
-# config = tf.ConfigProto()
-config = tf.ConfigProto( device_count = {'GPU': 0 , 'CPU': 4} ) 
-# config.gpu_options.allow_growth = True
-# config.gpu_options.allocator_type = 'BFC'
+config = tf.ConfigProto( device_count = {'GPU': 0 , 'CPU': 4})
 session = tf.Session(config=config)
 keras.backend.set_session(session)
 
@@ -27,7 +24,8 @@ class Application(tk.Frame):
         self.create_buttons()
         master.configure(background='gray')
         root.geometry("500x500")
-        # root.
+
+        
     def create_buttons(self):
         #open File button
         self.openFileButton = tk.Button(self)
@@ -41,8 +39,6 @@ class Application(tk.Frame):
         self.analyzeButton["command"] = self.analyze_image
         self.analyzeButton.pack(side="left")
 
-        # self.quit = tk.Button(self, text="QUIT", fg="red",command=root.destroy)
-        # self.quit.pack(side="right")
 
     def open_file(self):
         root.filename =  filedialog.askopenfilename(initialdir = "~/Desktop",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
