@@ -7,7 +7,7 @@ SEEN: Comparative study of Steganalysis using CNN, StegDetect and Zhang Ping Ste
 git clone https://github.com/jragustin/SP-SEEN.git
 cd SP-SEEN
 ```
-you can also download the already trained models using this link and save it to SP-SEEN/models folder
+you can also download the already trained models using this link and save it to *SP-SEEN/models* folder
 
 https://drive.google.com/file/d/1NdvZAGCGPYcH9-1qvBXvdkGSV4oZ7uEK/view?usp=sharing
 
