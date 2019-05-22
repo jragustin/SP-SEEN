@@ -180,7 +180,8 @@ class SteganalysisModel:
 def main():
     #create class
     network = SteganalysisModel()
-    network.predictImage("/home/jcooo/Desktop/Agustin (DO NOT DELETE)/Agustin, Jerico SP/main_dataset/testing_data/f5/2000.jpg")
+    path = os.getcwd()
+    network.predictImage(path+"/main_dataset/testing_data/f5/2000.jpg")
 
 if __name__ == "__main__":
     main()
