@@ -8,6 +8,8 @@ from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Conv2D
 from keras.preprocessing import image
 from keras.utils import to_categorical
+from tensorflow.python.keras.callbacks import TensorBoard
+from time import time   
 
 '''######################################
 Configuration to use cpu only
@@ -16,12 +18,30 @@ Configuration to use cpu only
 config = tf.ConfigProto( device_count = {'GPU': 0 , 'CPU': 4} ) 
 session = tf.Session(config=config)
 keras.backend.set_session(session)
+# init = tf.global_variables_initializer().run(session) 
+uninitialized_vars = []
+for var in tf.all_variables():
+    try:
+        sess.run(var)
+    except tf.errors.FailedPreconditionError:
+        uninitialized_vars.append(var)
+
+init_new_vars_op = tf.initialize_variables(uninitialized_vars)
+
+# keras.get_session().run(init).
+class AccuracyHistory(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.acc = []
+
+    def on_epoch_end(self, batch, logs={}):
+        self.acc.append(logs.get('acc'))
 
 
 class SteganalysisModel:
     def __init__(self):
         self.IMAGE_SIZE = 512        
         self.PATH = os.getcwd()
+
         self.createModel()
         self.trainModel()
         self.saveModel()
@@ -42,9 +62,9 @@ class SteganalysisModel:
         self.model.add(Activation('relu'))
 
         self.model.add(Flatten())
-        self.model.add(Dense(512, activation='relu'))
-        self.model.add(Dropout(0.4))
-        self.model.add(Dense(4, activation='softmax'))
+        # self.model.add(Dropout(0.4))
+        # self.model.add(Dense(512, activation='relu'))
+        self.model.add(Dense(3, activation='softmax'))
 
     '''################################
     This is where the training happens.
@@ -57,28 +77,28 @@ class SteganalysisModel:
         
 
         run_opts = tf.RunOptions(report_tensor_allocations_upon_oom = True)
+        tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+
         self.model.compile(loss=keras.losses.categorical_crossentropy,
-              optimizer=keras.optimizers.Adam(lr=0.001),
+              optimizer='sgd',
               metrics=['accuracy'], options = run_opts)
+        self.history = AccuracyHistory()
 
         self.model.fit(
             X_train, 
             y_train, 
-            batch_size=10, 
+            batch_size=1, 
             validation_data=(X_test, y_test), 
-            epochs=5)
-
+            epochs=5, callbacks=[self.history])
         self.model.summary()
         score = self.model.evaluate(X_test, y_test, verbose=0)
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
-        
 
-    '''################################
-    Saves the whole neural network with all the parameters, weights and biases.
-    '''################################ 
-    def saveModel(self):
-        self.model.save('./models/CNN_weights4.h5')
+        plt.plot(self.history.acc)
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.show()
 
     '''################################
     loads all the training data
@@ -139,6 +159,13 @@ class SteganalysisModel:
         X_test = X_test.reshape(-1,self.IMAGE_SIZE,self.IMAGE_SIZE,3)
 
         return(X_test, y_test)
+        
+
+    '''################################
+    Saves the whole neural network with all the parameters, weights and biases.
+    '''################################ 
+    def saveModel(self):
+        self.model.save('./models/CNN_model2.h5')
 
     '''################################
     classifies the image given
@@ -154,5 +181,6 @@ def main():
     #create class
     network = SteganalysisModel()
     network.predictImage("/home/jcooo/Desktop/Agustin (DO NOT DELETE)/Agustin, Jerico SP/main_dataset/testing_data/f5/2000.jpg")
+
 if __name__ == "__main__":
     main()
