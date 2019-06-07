@@ -1,3 +1,6 @@
+'''#############################
+This is the GUI for classifying a stego-bearing Image
+'''#############################
 import tkinter as tk
 import tkinter.filedialog as filedialog
 import numpy as np
@@ -69,13 +72,12 @@ class Application(tk.Frame):
             img = np.array(img)
             img = img.reshape(1, self.IMAGE_SIZE, self.IMAGE_SIZE,3)
             prediction = self.model.predict(img)
-            # self.model.predictImage(root.filename)
             print("predicting: ",prediction)
         else:
             print("No image open")
 
     def load_saved_model(self):
-        self.model = load_model('./models/CNN_weights3.h5')
+        self.model = load_model('./models-epoch/wow04-69.h5')
 
 root = tk.Tk()
 app = Application(master=root)
